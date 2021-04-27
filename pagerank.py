@@ -3,8 +3,7 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from time import time
 
-EPSILON = 0.00001
-DAMPING_FACTOR = 0.85
+EPSILON = 100
 
 def init_matrix(N):
     col_list = []
@@ -24,28 +23,26 @@ def check_convergence(v_prev, v_curr):
     magnitude = np.linalg.norm(difference)
     return magnitude
 
-def solution(T, b, N):
+def solution(T, N):
     u = np.full(N, 1)
     v = np.full(N, 1/N)
+    b = 0.85
     for i in range(100):
-        v = ((1-b)/N)*u + b*(np.dot(T,v))    
-
-def compare_convergence(v_curr, T, b, N):
-    difference = np.subtract(v, v_curr)
-    magnitude = np.linalg.norm(difference)
-    return magnitude
+        v = ((1-b)/N)*u + b*(np.dot(T,v))   
+    return np.argsort(v)
 
 def page_rank(T, b, N):
     u = np.full(N, 1)
     v_prev = np.full(N, 1/N)
     iteration_count = 0
 
+    ref = solution(T, N)
     while True:
         iteration_count += 1
         v_curr = ((1-b)/N)*u + b*(np.dot(T,v_prev))
-        #if(check_convergence(v_prev, v_curr) < EPSILON):
+        #if(check_convergence(ref, v_curr) < EPSILON):
         #    return v_curr, iteration_count
-        if(compare_convergence(v_curr, T, b, N) < EPSILON):
+        if(check_convergence(np.argsort(v_curr),ref) < EPSILON):
             return v_curr, iteration_count
 
         if(iteration_count > 100):
@@ -104,12 +101,13 @@ def time_complexity():
 
 
 def iteration_complexity():
-    T = init_matrix(50)
+    n = 100
+    T = init_matrix(n)
     damping_vals = np.arange(0,1,0.05)
     iterations_arr = []
 
     for b in damping_vals:
-        v, c = page_rank(T, b, 50)
+        v, c = page_rank(T, b, n)
         iterations_arr.append(c)
 
     plt.title("Iterations until convergence with varying damping factor")
